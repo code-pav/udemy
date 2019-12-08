@@ -10,7 +10,10 @@ if (process.env.NODE_ENV === 'development') {
 
 app
   .use(express.json())
-  .use(express.static(`${ __dirname }/public`));
+  .use(express.static(`${ __dirname }/public`))
+  .use((err, req, res, next) => {
+    err ? res.status(400).send({ status: "error", message: "Bad request" }) : next();
+  });
 
 app.use('/api/v1', routes);
 
