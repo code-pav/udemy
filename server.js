@@ -23,8 +23,19 @@ mongoose
   });
 
 
+//
+// const testTour = new Tour({ name: 'The Forest Hiker', rating: 4.7, price: 497 });
+//
+// testTour
+//   .save()
+//   .then((data) => {
+//     console.log(data);
+//   })
+//   .catch((err)=> {
+//     console.log('error', err.errmsg)
+//   });
 
-const app = require('./app');
+const app = require('./src/app');
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => {
