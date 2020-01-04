@@ -1,9 +1,7 @@
+require('dotenv').config({ path: '../../config.env' });
 const fs = require('fs');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const Tour = require('../../src/models/tourModel')
-
-dotenv.config({ path: '../../config.env' });
+const Tour = require('../../src/models/tourModel');
 
 const dbConnect = process.env.DB
   .replace('<PASSWORD>', process.env.DB_PASSWORD)
@@ -28,10 +26,10 @@ const data = JSON.parse(fs.readFileSync('./tours-simple.json', 'utf-8'));
 
 async function loadData() {
   try {
-    const tour = await Tour.create(data);
+    await Tour.create(data);
     console.log('Data loaded.')
   } catch (e) {
-    console.log(err)
+    console.log(e)
   }
   process.exit();
 
@@ -42,17 +40,18 @@ async function deleteData() {
     await Tour.deleteMany();
     console.log('Data deleted.')
   } catch (e) {
-    console.log(err)
+    console.log(e)
   }
   process.exit();
 
 }
 
-if(process.argv[2] === '--delete'){
+if (process.argv[2] === '--delete') {
   deleteData();
-}else if(process.argv[2] === '--insert'){
+} else if (process.argv[2] === '--insert') {
   loadData();
-}else{
+} else {
+  console.log('Please specify --delete or --insert flag and restart');
   process.exit();
 }
 

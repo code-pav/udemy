@@ -4,16 +4,23 @@ const getAllTours = async (req, res) => {
   // console.log(req.query);
   try {
     let queryObject = { ...req.query };
-    const exludedFields = ['page', 'offset','sort', 'limit', 'fields'];
+    // excluding some fields
+    const exludedFields = ['page', 'offset', 'sort', 'limit', 'fields'];
     exludedFields.forEach(exclude => delete queryObject[exclude]);
 
     // adv filtering
     const queryString = JSON.stringify(queryObject);
-    queryObject = JSON.parse(queryString.replace(/\b([gl]te?)\b/gi,(match) => `$${match}`));
+    queryObject = JSON.parse(queryString.replace(/\b([gl]te?)\b/gi, (match) => `$${ match }`));
 
-    console.log(queryObject);
-    const query = Tour.find(queryObject);
-    // { difficulty: 'easy', duration: { $gte: 5 } }
+    // create query
+    let query = Tour.find(queryObject);
+
+    // sorting
+    if (req.query.sort) {
+      query = query.sort(req.query.sort);
+    }
+
+    // exec query
     const tours = await query;
 
     res
