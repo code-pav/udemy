@@ -17,10 +17,21 @@ const getAllTours = async (req, res) => {
 
     // sorting
     if (req.query.sort) {
-      query = query.sort(req.query.sort);
+      // Mongoose accepts string, -string, {field: 'acs/desc/accending/deccending/-1/1'}
+      query = query.sort(req.query.sort.split(',').join(' '));
+    } else {
+      query = query.sort('-createdAt');
     }
 
-    // exec query
+    // fields limiting
+    if (req.query.fields) {
+      query = query.select('-__v ' + req.query.fields.split(',').join(' '));
+    } else {
+      query = query.select('-__v');
+    }
+
+    // same
+    // const tours = await query.exec();
     const tours = await query;
 
     res
@@ -62,6 +73,9 @@ const getTour = async (req, res) => {
 const createTour = async (req, res) => {
   try {
     const newTour = await Tour.create(req.body);
+    // Saving model instance
+    // const newTour = new Tour(req.body);
+    // await newTour.save();
     res
       .status(201)
       .json({

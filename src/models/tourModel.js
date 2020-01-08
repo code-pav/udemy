@@ -30,6 +30,8 @@ const tourSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: [true, "A tour should have price."],
+    // hide from default select
+    // select: false,
   },
   priceDiscount: Number,
   summary: {
