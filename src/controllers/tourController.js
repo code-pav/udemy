@@ -48,6 +48,9 @@ const getAllTours = async (req, res) => {
 
 const getTour = async (req, res) => {
   try {
+    if (req.params.id) {
+      console.log(req.params.id, 'need to throw error if id is wrong');
+    }
     const tour = await Tour.findById(req.params.id);
     res
       .status(200)
@@ -176,11 +179,40 @@ const getTourStats = async (req, res) => {
 
 const getMonthlyPlan = async (req, res) => {
   try {
-    const year = Number(req.params.year);
+    const year = Number(req.params.year); // 2021
     const plan = await Tour.aggregate([
       {
         $unwind: '$startDates'
-      }
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${ year }-01-01`),
+            $lte: new Date(`${ year }-12-31`),
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numToursStart: { $sum: 1 },
+          tours: { $push: '$name' },
+        }
+      },
+      {
+        $addFields: { month: '$_id' },
+      },
+      {
+        $project: {
+          _id: 0,
+        }
+      },
+      {
+        $sort: { numToursStart: -1 },
+      },
+      // {
+      //   $limit: 4,
+      // }
     ]);
 
     res.status(200).json({
@@ -195,5 +227,14 @@ const getMonthlyPlan = async (req, res) => {
     })
   }
 };
-module.exports = { getAllTours, getTour, createTour, updateTour, deleteTour, aliasTopTours, getTourStats, getMonthlyPlan };
+module.exports = {
+  getAllTours,
+  getTour,
+  createTour,
+  updateTour,
+  deleteTour,
+  aliasTopTours,
+  getTourStats,
+  getMonthlyPlan
+};
 
