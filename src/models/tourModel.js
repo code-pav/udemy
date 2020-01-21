@@ -7,6 +7,8 @@ const tourSchema = new mongoose.Schema({
     required: [true, "A tour should have name."],
     unique: true,
     trim: true,
+    maxlength: [40, "Tour max length is 50"],
+    minlength: [5, "Tour min length is 10"],
   },
   duration: {
     type: Number,
@@ -19,10 +21,18 @@ const tourSchema = new mongoose.Schema({
   difficulty: {
     type: String,
     required: [true, "Tour should have difficulty"],
+    // THE STRING ONLY
+    enum: {
+      values: ['easy', 'medium', 'difficult'],
+      message: 'Only easy, medium or difficult allowed',
+    }
   },
   ratingsAverage: {
     type: Number,
     default: 4.5,
+    // DATES TOO
+    min: [1, 'Ratings must be above 1.0'],
+    max: [5, 'Ratings must be below 5.0'],
   },
   ratingsQuantity: {
     type: Number,
@@ -34,7 +44,16 @@ const tourSchema = new mongoose.Schema({
     // hide from default select
     // select: false,
   },
-  priceDiscount: Number,
+  priceDiscount: {
+    type: Number,
+    validate: {
+      message: 'Discount price ({VALUE}) should be below regular price.',
+      validator: function (value) {
+        // this pointing on document only on creation
+        return value < this.price;
+      }
+    }
+  },
   summary: {
     type: String,
     trim: true,
@@ -55,6 +74,10 @@ const tourSchema = new mongoose.Schema({
   },
   startDates: [Date],
   slug: String,
+  secretTour: {
+    type: Boolean,
+    default: false,
+  }
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true },
@@ -79,6 +102,27 @@ tourSchema.pre('save', function (next) {
 //   console.log(doc);
 //   next();
 // });
+
+// QUERY MIDDLEWARE
+// tourSchema.pre('find', function (next) {
+
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
+  next();
+});
+
+tourSchema.post(/^find/, function (docs, next) {
+  console.log(Date.now() - this.start);
+  next();
+});
+
+//AGGREGATION MIDDLEWARE
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  console.log(this.pipeline());
+  next();
+});
 
 const Tour = mongoose.model('Tour', tourSchema);
 
