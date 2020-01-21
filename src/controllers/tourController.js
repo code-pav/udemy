@@ -3,14 +3,13 @@ const APIFeatures = require('../utils/apiFeatures.js');
 
 const aliasTopTours = async (req, res, next) => {
   req.query = {
-    ...req.query,
     limit: '5',
     sort: 'price,-ratingsAverage',
-    fields: 'name,price,ratingsAverage,summary,difficulty'
+    fields: 'name,price,ratingsAverage,summary,difficulty',
+    ...req.query,
   };
   next();
 };
-
 
 const getAllTours = async (req, res) => {
   try {
@@ -22,7 +21,7 @@ const getAllTours = async (req, res) => {
       .paginate();
 
     // same
-    // const tours = await query.exec();
+    // const tours = await features.query.exec();
     const tours = await features.query;
 
     // If no result on page throw error
@@ -130,5 +129,71 @@ const deleteTour = async (req, res) => {
   }
 };
 
-module.exports = { getAllTours, getTour, createTour, updateTour, deleteTour, aliasTopTours };
+const getTourStats = async (req, res) => {
+  try {
+    console.log('1');
+    const pipeline = Tour.aggregate([
+      {
+        $match: {
+          ratingsAverage: { $gte: 4.0 },
+          // ratingsAverage: 4.7,
+        }
+      },
+      {
+        $group: {
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        }
+      },
+      {
+        $sort: { avgPrice: 1 }
+      },
+      // {
+      //   $match: {
+      //     _id: { $ne: 'EASY' },
+      //   }
+      // },
+    ]);
+
+    const stats = await pipeline;
+
+    res.status(200).json({
+      status: 'success',
+      data: stats
+    })
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    })
+  }
+};
+
+const getMonthlyPlan = async (req, res) => {
+  try {
+    const year = Number(req.params.year);
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates'
+      }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      size: plan.length,
+      data: plan,
+    })
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    })
+  }
+};
+module.exports = { getAllTours, getTour, createTour, updateTour, deleteTour, aliasTopTours, getTourStats, getMonthlyPlan };
 
