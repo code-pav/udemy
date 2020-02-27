@@ -1,7 +1,8 @@
 const fs = require('fs');
+const AppError = require('../utils/appError.js');
 
 
-const getAllUsers = (req, res) => {
+const getAllUsers = (req, res, next) => {
   res.status(500).json({
     status: 'fail', message: 'This route not yet implemeted',
   });
