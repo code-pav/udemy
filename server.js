@@ -17,15 +17,25 @@ mongoose
     })
   .then(() => {
     console.log('Connection to db successful.')
-  })
-  .catch((err) => {
-    console.log('Cannot connect to db', err)
   });
 
 
 const app = require('./src/app');
 
 const PORT = process.env.PORT || 3333;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server listen on port: ${ PORT }`)
+});
+
+process.on('unhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
 });
